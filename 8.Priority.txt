@@ -1,0 +1,69 @@
+											Priority
+def priority_preemptive():
+    n = int(input("Enter number of processes: "))
+
+    processes = []
+    AT, BT, PRIOR = [], [], []
+
+    for i in range(n):
+        processes.append(f"P{i+1}")
+        AT.append(int(input(f"Arrival time of P{i+1}: ")))
+        BT.append(int(input(f"Burst time of P{i+1}: ")))
+        PRIOR.append(int(input(f"Priority of P{i+1}: ")))
+
+    BT_left = BT.copy()
+    CT = [0] * n
+    RT = [-1] * n
+    time = 0
+    completed = 0
+    gantt = []
+
+    print("\nProcess\tAT\tBT\tPriority")
+    for i in range(n):
+        print(f"{processes[i]}\t{AT[i]}\t{BT[i]}\t{PRIOR[i]}")
+
+    # Run until all processes complete
+    while completed < n:
+        # Find all available processes
+        ready = [i for i in range(n) if AT[i] <= time and BT_left[i] > 0]
+
+        if ready:
+            # Pick process with highest priority
+            i = max(ready, key=lambda x: PRIOR[x])
+            gantt.append(processes[i])
+
+            # Record first response time
+            if RT[i] == -1:
+                RT[i] = time - AT[i]
+
+            # Execute for 1 unit
+            BT_left[i] -= 1
+            time += 1
+
+            # Process completed
+            if BT_left[i] == 0:
+                CT[i] = time
+                completed += 1
+        else:
+            gantt.append("Idle")
+            time += 1
+
+    # Print results
+    print("\nProcess\tCT\tTAT\tWT\tRT")
+    total_tat = total_wt = 0
+    for i in range(n):
+        TAT = CT[i] - AT[i]
+        WT = TAT - BT[i]
+        total_tat += TAT
+        total_wt += WT
+        print(f"{processes[i]}\t{CT[i]}\t{TAT}\t{WT}\t{RT[i]}")
+
+    print(f"\nAverage TAT = {total_tat/n:.2f}")
+    print(f"Average WT = {total_wt/n:.2f}")
+
+    print("\nGantt Chart:")
+    print(" → ".join(gantt))
+
+
+# Run program
+priority_preemptive()

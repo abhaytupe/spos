@@ -1,0 +1,74 @@
+											7.Round Robin.
+
+def round_robin():
+    n = int(input("Enter number of processes: "))
+    time_quantum = int(input("Enter time quantum: "))
+
+    AT = []
+    BT = []
+    BT_backup = []
+    CT = [0] * n
+    TAT = [0] * n
+    WT = [0] * n
+    RT = [-1] * n
+    P_nm = []
+
+    # Input process details
+    for i in range(n):
+        at, bt = map(int, input(f"Enter Arrival Time and Burst Time for Process {i+1}: ").split())
+        AT.append(at)
+        BT.append(bt)
+        BT_backup.append(bt)
+        P_nm.append(f"P{i+1}")
+
+    time = 0
+    completed = 0
+    gantt = []
+
+    while completed < n:
+        process_executed = False
+
+        for i in range(n):
+            if AT[i] <= time and BT[i] > 0:
+                # Record response time (first time process is executed)
+                if RT[i] == -1:
+                    RT[i] = time - AT[i]
+
+                # Execute process for time quantum or remaining burst time
+                exec_time = min(time_quantum, BT[i])
+                time += exec_time
+                BT[i] -= exec_time
+
+                # Record Gantt Chart
+                for _ in range(exec_time):
+                    gantt.append(P_nm[i])
+
+                # If process finishes
+                if BT[i] == 0:
+                    CT[i] = time
+                    completed += 1
+
+                process_executed = True
+
+        # If no process executed (CPU idle)
+        if not process_executed:
+            gantt.append("Idle")
+            time += 1
+
+    # Calculate Turnaround Time and Waiting Time
+    for i in range(n):
+        TAT[i] = CT[i] - AT[i]
+        WT[i] = TAT[i] - BT_backup[i]
+
+    # Print Results
+    print("\nProcess\tAT\tBT\tCT\tTAT\tWT\tRT")
+    for i in range(n):
+        print(f"{P_nm[i]}\t{AT[i]}\t{BT_backup[i]}\t{CT[i]}\t{TAT[i]}\t{WT[i]}\t{RT[i]}")
+
+    # Print Gantt Chart
+    print("\nGantt Chart:")
+    print(" ".join(gantt))
+
+
+# Run the program
+round_robin()

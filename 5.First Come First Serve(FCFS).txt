@@ -1,0 +1,39 @@
+											CPU Scheduling Algorithms: FCFS.
+
+def fcfs():
+    n = int(input("Enter number of processes: "))
+    processes = []
+
+    for i in range(n):
+        at = int(input(f"Arrival time of P{i+1}: "))
+        bt = int(input(f"Burst time of P{i+1}: "))
+        processes.append([f"P{i+1}", at, bt])
+
+    # Sort by arrival time
+    processes.sort(key=lambda x: x[1])
+
+    time = 0
+    total_tat = total_wt = 0
+
+    print("\nProcess\tAT\tBT\tCT\tTAT\tWT")
+
+    for p in processes:
+        pid, at, bt = p
+        if time < at:
+            time = at
+        ct = time + bt
+        tat = ct - at
+        wt = tat - bt
+        time = ct
+
+        total_tat += tat
+        total_wt += wt
+
+        print(f"{pid}\t{at}\t{bt}\t{ct}\t{tat}\t{wt}")
+
+    print(f"\nAverage TAT = {total_tat/n:.2f}")
+    print(f"Average WT = {total_wt/n:.2f}")
+
+# Run the function
+fcfs()
+

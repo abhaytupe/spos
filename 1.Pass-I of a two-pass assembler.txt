@@ -1,0 +1,109 @@
+											1.Pass-I of a two-pass assembler
+
+def pass1(lines):
+    LC = 0  # Location Counter
+    SYMTAB = {}
+    LITTAB = []
+    POOLTAB = []
+    INTERMEDIATE = []
+
+    # Define some opcodes and their sizes
+    OPTAB = {
+        "START": 0, "MOVER": 1, "MOVEM": 1, "ADD": 1, "SUB": 1, "MULT": 1,
+        "READ": 1, "PRINT": 1, "DC": 1, "DS": 1, "END": 0
+    }
+
+    for line in lines:
+        words = line.strip().split()
+        if not words:
+            continue
+
+        if "START" in words:
+            LC = int(words[-1])
+            INTERMEDIATE.append(f"(AD,01) (C,{LC})")
+
+        elif "END" in words:
+            INTERMEDIATE.append("(AD,02)")
+            POOLTAB.append(len(LITTAB))
+            # Assign addresses to literals
+            for lit in LITTAB:
+                if 'addr' not in lit:
+                    lit['addr'] = LC
+                    LC += 1
+            break
+
+        elif "LTORG" in words:
+            INTERMEDIATE.append("(AD,03)")
+            POOLTAB.append(len(LITTAB))
+            for lit in LITTAB:
+                if 'addr' not in lit:
+                    lit['addr'] = LC
+                    LC += 1
+
+        else:
+            # Handle label
+            if words[0][-1] == ":":
+                label = words[0][:-1]
+                SYMTAB[label] = LC
+                words = words[1:]
+
+            opcode = words[0]
+
+            # Handle Declarative Statements
+            if opcode == "DC":
+                SYMTAB[label] = LC
+                INTERMEDIATE.append(f"(DL,01) (C,{words[1]})")
+                LC += 1
+
+            elif opcode == "DS":
+                SYMTAB[label] = LC
+                INTERMEDIATE.append(f"(DL,02) (C,{words[1]})")
+                LC += int(words[1])
+
+            # Handle Imperative Statements
+            elif opcode in OPTAB:
+                op_str = f"(IS,{list(OPTAB.keys()).index(opcode)+1:02})"
+                operands = []
+                for w in words[1:]:
+                    if w.startswith("="):
+                        LITTAB.append({"lit": w, "addr": None})
+                        operands.append(f"(L,{len(LITTAB)})")
+                    elif w.isalpha():
+                        if w not in SYMTAB:
+                            SYMTAB[w] = None
+                        operands.append(f"(S,{list(SYMTAB.keys()).index(w)+1})")
+                INTERMEDIATE.append(f"{op_str} " + " ".join(operands))
+                LC += 1
+
+    return SYMTAB, LITTAB, POOLTAB, INTERMEDIATE
+
+
+# ---------- Sample Input Program ----------
+source_code = [
+    "START 100",
+    "READ A",
+    "MOVER AREG, =5",
+    "ADD AREG, B",
+    "MOVEM AREG, C",
+    "C DC 10",
+    "B DS 1",
+    "END"
+]
+
+# ---------- Run Pass-I ----------
+SYMTAB, LITTAB, POOLTAB, INTERMEDIATE = pass1(source_code)
+
+# ---------- Display Results ----------
+print("\nSymbol Table (SYMTAB):")
+for sym, addr in SYMTAB.items():
+    print(f"{sym}\t{addr}")
+
+print("\nLiteral Table (LITTAB):")
+for i, lit in enumerate(LITTAB, start=1):
+    print(f"{i}\t{lit['lit']}\t{lit['addr']}")
+
+print("\nPool Table (POOLTAB):", POOLTAB)
+
+print("\nIntermediate Code:")
+for line in INTERMEDIATE:
+    print(line)

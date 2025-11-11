@@ -1,0 +1,105 @@
+										*Pass 1 of a Macro Processor
+
+import re
+
+def main():
+    for_ALA = 1
+    for_MDT = 1
+
+    # Input macro lines directly here instead of reading from a file
+    lines = [
+        "MACRO",
+        "INCR &arg1 , &arg2",
+        "ADD AREG , &arg1",
+        "SUB BREG , &arg2",
+        "MEND",
+        "START",
+        "READ A",
+        "READ B",
+        "INCR A , B",
+        "STOP",
+        "A DC 2",
+        "B DS 1",
+        "END"
+    ]
+
+    try:
+        ALA = {}   # Argument List Array
+        MDT = {}   # Macro Definition Table
+        MNT = ["", "", ""]  # Macro Name Table (3 fields)
+
+        # Skip first line (MACRO) and get macro definition line
+        line1 = lines[1].strip()
+
+        # Extract macro name (first word)
+        z = line1.split()[0]
+
+        # Add first line to MDT
+        MDT[for_MDT] = line1
+        for_MDT += 1
+
+        # Split macro definition line and clean tokens
+        words = re.split(r'\s+|,', line1)
+        words = [w for w in words if w]
+
+        # Build ALA table
+        for w in words:
+            if w.startswith("&"):
+                ALA[w] = for_ALA
+                for_ALA += 1
+
+        # Process macro body until MEND
+        i = 2
+        while i < len(lines):
+            line1 = lines[i].strip()
+            if line1 == "MEND":
+                break
+
+            words = re.split(r'\s+|,', line1)
+            words = [w for w in words if w]
+
+            for idx, w in enumerate(words):
+                if w.startswith("&"):
+                    temp1 = ALA[w]
+                    temp2 = f"#{temp1}"
+                    words[idx] = temp2
+
+            temp3 = " ".join(words)
+            MDT[for_MDT] = temp3
+            for_MDT += 1
+            i += 1
+
+        # Add MEND to MDT
+        MDT[for_MDT] = "MEND"
+        for_MDT += 1
+
+        # Display MDT
+        print("\nThe MDT is:- ")
+        for key, value in MDT.items():
+            print(f"{key}\t{value}")
+
+        # Display ALA
+        print("\nThe ALA is:- ")
+        for key, value in ALA.items():
+            print(f"{key}\t{value}")
+
+        # Build MNT
+        MNT[0] = "1"
+        MNT[1] = z
+        MNT[2] = "1"
+
+        print("\nThe MNT Table:- ")
+        print("\t".join(MNT))
+
+        # Display intermediate code
+        print("\n\nThe Intermediate code is:-")
+        while i + 1 < len(lines):
+            i += 1
+            print(lines[i].strip())
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+
+if __name__ == "__main__":
+    main()

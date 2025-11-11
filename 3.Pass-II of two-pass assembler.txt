@@ -1,0 +1,85 @@
+											3.Pass-II of two-pass assembler
+def pass2(intermediate, SYMTAB, LITTAB):
+    machine_code = []
+
+    # Predefined register and opcode tables (for simplicity)
+    REGTAB = {"AREG": 1, "BREG": 2, "CREG": 3, "DREG": 4}
+    OPTAB = {
+        "01": "START", "02": "END", "03": "LTORG", "07": "READ",
+        "02IS": "MOVER", "03IS": "MOVEM", "04IS": "ADD", "05IS": "SUB", "06IS": "MULT"
+    }
+
+    LC = 0
+    for line in intermediate:
+        line = line.strip()
+
+        # Handle Assembler Directives
+        if line.startswith("(AD"):
+            continue
+
+        elif line.startswith("(DL"):
+            # e.g., (DL,01) (C,10)
+            parts = line.replace("(", "").replace(")", "").split()
+            if parts[0].startswith("DL,01"):  # DC
+                value = parts[1].split(",")[1]
+                machine_code.append(f"{LC}\t00\t0\t{value}")
+                LC += 1
+            elif parts[0].startswith("DL,02"):  # DS
+                LC += int(parts[1].split(",")[1])
+            continue
+
+        elif line.startswith("(IS"):
+            # Example: (IS,02) (RG,1) (S,1)
+            parts = line.replace("(", "").replace(")", "").split()
+            opcode = int(parts[0].split(",")[1])
+            reg = 0
+            mem = 0
+
+            if len(parts) > 1:
+                # find register operand
+                if "RG" in parts[1]:
+                    reg = int(parts[1].split(",")[1])
+                elif "S" in parts[1]:
+                    sym_index = int(parts[1].split(",")[1]) - 1
+                    sym_name = list(SYMTAB.keys())[sym_index]
+                    mem = SYMTAB[sym_name]
+                elif "L" in parts[1]:
+                    lit_index = int(parts[1].split(",")[1]) - 1
+                    mem = LITTAB[lit_index]['addr']
+
+            if len(parts) > 2:
+                if "S" in parts[2]:
+                    sym_index = int(parts[2].split(",")[1]) - 1
+                    sym_name = list(SYMTAB.keys())[sym_index]
+                    mem = SYMTAB[sym_name]
+                elif "L" in parts[2]:
+                    lit_index = int(parts[2].split(",")[1]) - 1
+                    mem = LITTAB[lit_index]['addr']
+
+            machine_code.append(f"{LC}\t{opcode}\t{reg}\t{mem}")
+            LC += 1
+
+    return machine_code
+
+
+# ---------- SAMPLE DATA FROM PASS-I ----------
+SYMTAB = {"A": 100, "C": 104, "B": 105}
+LITTAB = [{"lit": "=5", "addr": 103}]
+INTERMEDIATE = [
+    "(AD,01) (C,100)",
+    "(IS,07) (S,1)",
+    "(IS,02) (L,1)",
+    "(IS,04) (S,3)",
+    "(IS,03) (S,2)",
+    "(DL,01) (C,10)",
+    "(DL,02) (C,1)",
+    "(AD,02)"
+]
+
+# ---------- RUN PASS-II ----------
+final_code = pass2(INTERMEDIATE, SYMTAB, LITTAB)
+
+print("\nFINAL MACHINE CODE:")
+print("LC\tOP\tR\tMEM")
+for line in final_code:
+    print(line)

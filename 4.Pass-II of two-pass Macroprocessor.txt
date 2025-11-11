@@ -1,0 +1,57 @@
+									4.Pass-II of two-pass Macroprocessor
+
+
+# Macro Name Table (MNT)
+MNT = [
+    {"Name": "INCR", "MDT_index": 1},
+    {"Name": "SWAP", "MDT_index": 4}
+]
+
+# Macro Definition Table (MDT)
+MDT = [
+    "ADD AREG, #1",
+    "STORE #1",
+    "MEND",
+    "XCHG #1, #2",
+    "MEND"
+]
+
+# Argument List Array (from Pass-I)
+ALA_master = {"&A": 1, "&B": 2}
+
+# Source program
+code = [
+    "START",
+    "READ X",
+    "INCR X",
+    "SWAP A, B",
+    "STOP",
+    "END"
+]
+
+# -------- Pass-II Processing --------
+print("Expanded Code (after macro expansion):")
+for line in code:
+    parts = line.strip().replace(',', '').split()
+    if not parts:
+        continue
+
+    macro_name = parts[0]
+    macro_found = next((m for m in MNT if m["Name"] == macro_name), None)
+
+    if macro_found:  # If macro call
+        args = parts[1:]
+        ALA = {}
+        for k, v in ALA_master.items():
+            if v <= len(args):          # Prevent index out of range
+                ALA[f"#{v}"] = args[v - 1]
+
+        idx = macro_found["MDT_index"] - 1
+        while MDT[idx] != "MEND":
+            temp = MDT[idx]
+            for key, val in ALA.items():
+                temp = temp.replace(key, val)
+            print(temp)
+            idx += 1
+    else:
+        print(line)

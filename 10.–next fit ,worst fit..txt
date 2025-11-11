@@ -1,0 +1,71 @@
+											Next Fit
+# Program: Next Fit Memory Allocation
+
+def next_fit(blocks, process):
+    allocation = [-1] * len(process)
+    j = 0  # Pointer to remember last allocated block
+
+    for i in range(len(process)):
+        count = 0
+        while count < len(blocks):
+            if blocks[j] >= process[i]:
+                allocation[i] = j
+                blocks[j] -= process[i]
+                break
+            j = (j + 1) % len(blocks)
+            count += 1
+
+    print("Next Fit Allocation:")
+    print("Process No.\tProcess Size\tBlock No.")
+    for i in range(len(process)):
+        if allocation[i] != -1:
+            print(f"{i+1}\t\t{process[i]}\t\t{allocation[i]+1}")
+        else:
+            print(f"{i+1}\t\t{process[i]}\t\tNot Allocated")
+
+
+# ----- MAIN -----
+memory_blocks = [100, 500, 200, 300, 600]
+process_size = [212, 417, 112, 426]
+
+print("Memory Blocks:", memory_blocks)
+print("Processes:", process_size)
+print()
+
+next_fit(memory_blocks.copy(), process_size)
+												Worst Fit
+
+
+# Program: Worst Fit Memory Allocation
+
+def worst_fit(blocks, process):
+    allocation = [-1] * len(process)
+
+    for i in range(len(process)):
+        worst_index = -1
+        for j in range(len(blocks)):
+            if blocks[j] >= process[i]:
+                if worst_index == -1 or blocks[j] > blocks[worst_index]:
+                    worst_index = j
+        if worst_index != -1:
+            allocation[i] = worst_index
+            blocks[worst_index] -= process[i]
+
+    print("Worst Fit Allocation:")
+    print("Process No.\tProcess Size\tBlock No.")
+    for i in range(len(process)):
+        if allocation[i] != -1:
+            print(f"{i+1}\t\t{process[i]}\t\t{allocation[i]+1}")
+        else:
+            print(f"{i+1}\t\t{process[i]}\t\tNot Allocated")
+
+
+# ----- MAIN -----
+memory_blocks = [100, 500, 200, 300, 600]
+process_size = [212, 417, 112, 426]
+
+print("Memory Blocks:", memory_blocks)
+print("Processes:", process_size)
+print()
+
+worst_fit(memory_blocks.copy(), process_size)
