@@ -1,0 +1,182 @@
+1. Design suitable Data structures and implement Pass-I of a two-pass assembler for pseudo-machine.
+
+import java.util.*;
+
+public class TwoPassAssemblerPass1 {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        // Opcode table (simplified)
+        Map<String, String> OPTAB = Map.of(
+            "ADD", "01", "SUB", "02", "MOVER", "03", "MOVEM", "04",
+            "READ", "05", "PRINT", "06", "STOP", "00"
+        );
+
+        Map<String, Integer> SYMTAB = new HashMap<>(); // Symbol table
+        List<String> intermediate = new ArrayList<>(); // Intermediate code
+
+        System.out.print("Enter number of lines in program: ");
+        int n = sc.nextInt();
+        sc.nextLine(); // consume newline
+
+        int loc = 0; // Location counter
+
+        System.out.println("Enter program line by line (LABEL OPCODE OPERAND):");
+        for (int i = 0; i < n; i++) {
+            String line = sc.nextLine().toUpperCase();
+            String[] parts = line.split("\\s+");
+            String label = parts.length > 2 ? parts[0] : "-";
+            String opcode = parts.length > 2 ? parts[1] : parts[0];
+            String operand = parts.length > 2 ? parts[2] : (parts.length > 1 ? parts[1] : "-");
+
+            // If label exists, add to symbol table
+            if (!label.equals("-")) {
+                SYMTAB.put(label, loc);
+            }
+
+            // Generate intermediate code
+            String code = loc + "\t" + OPTAB.getOrDefault(opcode, "??") + "\t" + operand;
+            intermediate.add(code);
+
+            loc += 1; // increment location counter (assume 1 per instruction)
+        }
+
+        // Display intermediate code
+        System.out.println("\nIntermediate Code:");
+        for (String code : intermediate) {
+            System.out.println(code);
+        }
+
+        // Display symbol table
+        System.out.println("\nSymbol Table:");
+        System.out.println("Symbol\tAddress");
+        for (String sym : SYMTAB.keySet()) {
+            System.out.println(sym + "\t" + SYMTAB.get(sym));
+        }
+    }
+}
+
+
+5. Program to simulate CPU Scheduling Algorithms: FCFS.
+
+import java.util.Scanner;
+
+public class FCFS {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        System.out.print("Enter number of processes: ");
+        int n = sc.nextInt();
+        int[] bt = new int[n]; // burst time
+        int[] wt = new int[n]; // waiting time
+        int[] tat = new int[n]; // turnaround time
+
+        for (int i = 0; i < n; i++) {
+            System.out.print("Enter burst time for process " + (i + 1) + ": ");
+            bt[i] = sc.nextInt();
+        }
+
+        // Calculate waiting time
+        wt[0] = 0;
+        for (int i = 1; i < n; i++) {
+            wt[i] = wt[i - 1] + bt[i - 1];
+        }
+
+        // Calculate turnaround time
+        for (int i = 0; i < n; i++) {
+            tat[i] = wt[i] + bt[i];
+        }
+
+        // Display results
+        System.out.println("\nProcess\tBurst Time\tWaiting Time\tTurnaround Time");
+        for (int i = 0; i < n; i++) {
+            System.out.println((i + 1) + "\t\t" + bt[i] + "\t\t" + wt[i] + "\t\t" + tat[i]);
+        }
+
+        // Calculate and display average times
+        double avgWT = 0, avgTAT = 0;
+        for (int i = 0; i < n; i++) {
+            avgWT += wt[i];
+            avgTAT += tat[i];
+        }
+        System.out.println("\nAverage Waiting Time: " + (avgWT / n));
+        System.out.println("Average Turnaround Time: " + (avgTAT / n));
+    }
+}
+
+9. Write a program to simulate Memory placement strategies – best fit, first fit.
+
+import java.util.Scanner;
+
+public class MemoryAllocation {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        System.out.print("Enter number of memory blocks: ");
+        int m = sc.nextInt();
+        int[] blockSize = new int[m];
+        for (int i = 0; i < m; i++) {
+            System.out.print("Enter size of block " + (i + 1) + ": ");
+            blockSize[i] = sc.nextInt();
+        }
+
+        System.out.print("Enter number of processes: ");
+        int n = sc.nextInt();
+        int[] processSize = new int[n];
+        for (int i = 0; i < n; i++) {
+            System.out.print("Enter size of process " + (i + 1) + ": ");
+            processSize[i] = sc.nextInt();
+        }
+
+        // First Fit Allocation
+        int[] firstFit = new int[n];
+        for (int i = 0; i < n; i++) firstFit[i] = -1;
+
+        int[] tempBlock = blockSize.clone();
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
+                if (tempBlock[j] >= processSize[i]) {
+                    firstFit[i] = j;
+                    tempBlock[j] -= processSize[i];
+                    break;
+                }
+            }
+        }
+
+        System.out.println("\nFirst Fit Allocation:");
+        for (int i = 0; i < n; i++) {
+            if (firstFit[i] != -1)
+                System.out.println("Process " + (i + 1) + " -> Block " + (firstFit[i] + 1));
+            else
+                System.out.println("Process " + (i + 1) + " -> Not Allocated");
+        }
+
+        // Best Fit Allocation
+        int[] bestFit = new int[n];
+        for (int i = 0; i < n; i++) bestFit[i] = -1;
+
+        tempBlock = blockSize.clone();
+        for (int i = 0; i < n; i++) {
+            int bestIdx = -1;
+            for (int j = 0; j < m; j++) {
+                if (tempBlock[j] >= processSize[i]) {
+                    if (bestIdx == -1 || tempBlock[j] < tempBlock[bestIdx]) {
+                        bestIdx = j;
+                    }
+                }
+            }
+            if (bestIdx != -1) {
+                bestFit[i] = bestIdx;
+                tempBlock[bestIdx] -= processSize[i];
+            }
+        }
+
+        System.out.println("\nBest Fit Allocation:");
+        for (int i = 0; i < n; i++) {
+            if (bestFit[i] != -1)
+                System.out.println("Process " + (i + 1) + " -> Block " + (bestFit[i] + 1));
+            else
+                System.out.println("Process " + (i + 1) + " -> Not Allocated");
+        }
+    }
+}
